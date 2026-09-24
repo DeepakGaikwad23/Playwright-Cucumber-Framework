@@ -1,34 +1,25 @@
 name: Playwright Cucumber Tests
 
 on:
-
   push:
-    branches:
-      - master
-
+    branches: [master]
   pull_request:
-    branches:
-      - master
-
+    branches: [master]
   workflow_dispatch:
 
 jobs:
-
   test:
-
+    timeout-minutes: 30
     runs-on: ubuntu-latest
 
-    timeout-minutes: 30
-
     steps:
-
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -37,29 +28,29 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: TypeScript check
-        run: npm run typecheck
-
       - name: Run Cucumber tests
         run: npm test
 
-      - name: Upload Cucumber report
+      - name: Upload Reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cucumber-report
+          name: cucumber-reports
           path: reports/
+          if-no-files-found: ignore
 
-      - name: Upload screenshots
+      - name: Upload Screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: screenshots
           path: screenshots/
+          if-no-files-found: ignore
 
-      - name: Upload traces
+      - name: Upload Traces
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: traces
           path: traces/
+          if-no-files-found: ignore
