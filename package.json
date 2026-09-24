@@ -1,0 +1,18 @@
+{
+  "devDependencies": {
+    "@cucumber/cucumber": "^13.2.1",
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.2",
+    "cross-env": "^10.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "test": "cucumber-js",
+    "test:smoke": "cucumber-js --tags \"@smoke\"",
+    "test:regression": "cucumber-js --tags \"@regression\"",
+    "test:headed": "cross-env HEADLESS=false cucumber-js",
+    "test:headless": "cross-env HEADLESS=true cucumber-js",
+    "typecheck": "tsc --noEmit"
+  }
+}
