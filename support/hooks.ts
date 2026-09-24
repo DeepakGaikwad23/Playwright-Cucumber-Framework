@@ -1,8 +1,7 @@
 import {
     Before,
     After,
-    Status,
-    setDefaultTimeout
+    Status
 } from '@cucumber/cucumber';
 
 import {
@@ -17,13 +16,9 @@ import { CustomWorld } from './world';
 import { config } from './config';
 
 
-// Cucumber step timeout
-setDefaultTimeout(30 * 1000);
-
-
 Before(async function (this: CustomWorld) {
 
-    // Create folders
+    // Create required folders
     if (!fs.existsSync('screenshots')) {
         fs.mkdirSync('screenshots', {
             recursive: true
@@ -36,102 +31,110 @@ Before(async function (this: CustomWorld) {
         });
     }
 
+    if (!fs.existsSync('reports')) {
+        fs.mkdirSync('reports', {
+            recursive: true
+        });
+    }
+
 
     // Launch browser
     if (config.browser === 'firefox') {
 
-        this.browser =
-            await firefox.launch({
-                headless: config.headless
-            });
+        this.browser = await firefox.launch({
+            headless: config.headless
+        });
 
     } else if (config.browser === 'webkit') {
 
-        this.browser =
-            await webkit.launch({
-                headless: config.headless
-            });
-
-    } else {
-
-        this.browser =
-            await chromium.launch({
-                headless: config.headless
-            });
-    }
-
-
-    // Create context
-    this.context =
-        await this.browser.newContext();
-
-
-    // Start tracing
-    await this.context.tracing.start({
-        screenshots: true,
-        snapshots: true
-    });
-
-
-    // Create page
-    this.page =
-        await this.context.newPage();
-
-
-    // Navigate to SauceDemo
-    await this.page.goto(
-        'https://www.saucedemo.com/',
-        {
-            waitUntil: 'domcontentloaded'
-        }
-    );
-
-    console.log(
-        'Browser started. URL:',
-        this.page.url()
-    );
-});
-
-
-After(async function (
-    this: CustomWorld,
-    scenario
-) {
-
-    const scenarioName =
-        scenario.pickle.name
-            .replace(/[^a-zA-Z0-9]/g, '_');
-
-
-    // Capture screenshot when failed
-    if (scenario.result?.status === Status.FAILED) {
-
-        const screenshot =
-            await this.page.screenshot({
-                path:
-                    `screenshots/${scenarioName}.png`,
-                fullPage: true
-            });
-
-        this.attach(
-            screenshot,
-            'image/png'
-        );
-
-
-        // Save trace
-        await this.context.tracing.stop({
-            path:
-                `traces/${scenarioName}.zip`
+        this.browser = await webkit.launch({
+            headless: config.headless
         });
 
     } else {
 
-        await this.context.tracing.stop();
+        this.browser = await chromium.launch({
+            headless: config.headless
+        });
+
+    }
+
+
+    // Create browser context
+    this.context = await this.browser.newContext();
+
+
+    // Start Playwright tracing
+    await this.context.tracing.start({
+        screenshots: true,
+        snapshots: true,
+        sources: true
+    });
+
+
+    // Create page
+    this.page = await this.context.newPage();
+
+});
+
+
+After(async function (this: CustomWorld, scenario) {
+
+    const scenarioName = scenario.pickle.name
+        .replace(/[^a-zA-Z0-9]/g, '_');
+
+
+    // Take screenshot when scenario fails
+    if (
+        scenario.result?.status === Status.FAILED &&
+        this.page
+    ) {
+
+        const screenshotPath =
+            `screenshots/${scenarioName}.png`;
+
+        await this.page.screenshot({
+            path: screenshotPath,
+            fullPage: true
+        });
+
+        const screenshot =
+            fs.readFileSync(screenshotPath);
+
+        await this.attach(
+            screenshot,
+            'image/png'
+        );
+    }
+
+
+    // Stop tracing
+    if (this.context) {
+
+        const tracePath =
+            `traces/${scenarioName}.zip`;
+
+        await this.context.tracing.stop({
+            path: tracePath
+        });
+    }
+
+
+    // Close page
+    if (this.page) {
+        await this.page.close();
+    }
+
+
+    // Close context
+    if (this.context) {
+        await this.context.close();
     }
 
 
     // Close browser
-    await this.browser.close();
-});
+    if (this.browser) {
+        await this.browser.close();
+    }
 
+});

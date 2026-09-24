@@ -5,7 +5,7 @@ export const config = {
         'https://www.saucedemo.com',
 
     headless:
-        process.env.HEADLESS === 'true',
+        process.env.CI === 'true',
 
     browser:
         process.env.BROWSER ||
