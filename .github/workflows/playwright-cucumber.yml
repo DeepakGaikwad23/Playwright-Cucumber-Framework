@@ -2,10 +2,15 @@ name: Playwright Cucumber Tests
 
 on:
   push:
-    branches: [master]
+    branches: [ master ]
+
   pull_request:
-    branches: [master]
+    branches: [ master ]
+
   workflow_dispatch:
+
+  schedule:
+    - cron: '30 12 * * *'
 
 jobs:
   test:
@@ -31,14 +36,6 @@ jobs:
       - name: Run Cucumber tests
         run: npm test
 
-      - name: Upload Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: cucumber-reports
-          path: reports/
-          if-no-files-found: ignore
-
       - name: Upload Screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -53,4 +50,12 @@ jobs:
         with:
           name: traces
           path: traces/
+          if-no-files-found: ignore
+
+      - name: Upload Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: reports/
           if-no-files-found: ignore
